@@ -1,4 +1,8 @@
 #%%
+##Limpar variáveis
+#from IPython import get_ipython
+#get_ipython().magic('reset -sf')
+
 from sqlalchemy import create_engine
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -12,8 +16,8 @@ c.execute('USE db_test;')
 df_plot1=pd.DataFrame()
 df_plot2=pd.DataFrame()
 start_time= datetime.datetime(2020, 6, 22, 23, 15) #start_time= '2020-06-22 23:15:00'
-end_time= datetime.datetime(2020, 6, 22, 23, 45) #end_time = '2020-06-22 23:45:00'
-time_slot= timedelta(minutes=5, hours=0)
+end_time= datetime.datetime(2020, 6, 23, 00, 45) #end_time = '2020-06-23 00:45:00'
+time_slot= timedelta(minutes=20, hours=0)
 
 # SCANS TOTAL
 while (start_time<end_time):
@@ -178,3 +182,4 @@ plt.show()
 #print("\nREPETIÇÕES DE CADA MAC:") 
 #for i in range(len(lista_macs)):    
 #    print(lista_macs[i]+" foi encontrado "+str(repete[i])+" vez(es)")
+# %%

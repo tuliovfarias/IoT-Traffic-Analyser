@@ -1,5 +1,6 @@
 #%%
 from sqlalchemy import create_engine
+import pymysql
 import pandas as pd
 import os
 import shutil
@@ -8,7 +9,8 @@ import sys
 
 warnings.filterwarnings("ignore") ##Desabilita mensagens de Warning
 sys.exit
-BASE_DIR='C:\\Google Drive\\CEFET\\TCC\\Programas\\FILES'
+SCRIPT_PATH= __file__
+BASE_DIR=SCRIPT_PATH.split("\scripts")[0]
 SOURCE_DIR= os.path.join(BASE_DIR,'data')
 TARGET_DIR= os.path.join(BASE_DIR,'imported')
 
@@ -33,7 +35,7 @@ if len(list_files)==0:
     print("No files to import!")
 else:
     for file in os.listdir(SOURCE_DIR):
-        df = pd.read_csv(SOURCE_DIR+'/'+file, header=None, error_bad_lines=False, warn_bad_lines=True,  names=col_names,  index_col=False, encoding='ISO-8859–1', engine='python',sep=",") #error_bad_lines=False
+        df = pd.read_csv(SOURCE_DIR+'/'+file, header=None, error_bad_lines=False, warn_bad_lines=True,  names=col_names,  index_col=False, encoding='ISO-8859–1', engine='python',sep=",") #
         #df.MAC=df.MAC.str.strip('+INQ:') # remove +INQ dos MACs
         start_datetime=df.at[0,'datetime']
         end_datetime=df.at[len(df.index)-1,'datetime']
@@ -42,8 +44,8 @@ else:
         df.MAC.fillna("0", inplace = True) # substituir NULL por 0 no MAC (evitar erro se MAC cannot be NULL) 
         df.device_name.fillna("0", inplace = True) # substituir NULL por 0 no MAC (evitar erro se deviceID cannot be NULL) 
         #df.reset_index(drop=True, inplace=True) #remover maldito index
-        df.to_sql(name='table_temp', if_exists='append', con=c, index=False) 
-        df.to_sql(name='table_all_scans', if_exists='append', con=c, index=False) 
+        df.to_sql(name='table_temp', if_exists='append', con=c, index=False) # tabela temporária apenas com dados do arquivo atual
+        df.to_sql(name='table_all_scans', if_exists='append', con=c, index=False) # tabela com todos os dados
         #c.execute('ALTER TABLE db_test.table_temp MODIFY COLUMN `datetime` datetime;')
         shutil.move(SOURCE_DIR+'/'+file, TARGET_DIR)
         print(file)
@@ -52,16 +54,11 @@ else:
                     FROM db_test.table_temp
                     WHERE datetime BETWEEN '"""+start_datetime+"' and '"+end_datetime+"""'
                     GROUP BY device_name,MAC;""")
-        c.execute(query_mac_count)
+        c.execute(query_mac_count) # tabela com os MACs distintos e sua contagem (para cada arquivo)
         c.execute("TRUNCATE TABLE db_test.table_temp;")
     #c.execute("""CREATE TABLE IF NOT EXISTS mac_count AS
     #          SELECT *, COUNT(MAC) AS qtd FROM db_test.table_test 
     #         GROUP BY `MAC`;""")
 
     print("Imported!")
-
-
-
-
-
-
+# %%
