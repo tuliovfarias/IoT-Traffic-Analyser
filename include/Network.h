@@ -10,11 +10,10 @@ IPAddress subnet(255, 255, 255, 0);   // Set your network sub-network mask here
 IPAddress dns(192,168,1,1);           // Set your network DNS usually your Router base address
 
 const char ssid_1[]     = "2G TULIO (2)";
-
 const char password_1[] = "1234567890";
 
-const char ssid_2[]     = "your_SSID2";
-const char password_2[] = "your_PASSWORD_for SSID2";
+const char ssid_2[]     = "2G TULIO";
+const char password_2[] = "1234567890";
 
 const char ssid_3[]     = "your_SSID3";
 const char password_3[] = "your_PASSWORD_for SSID3";

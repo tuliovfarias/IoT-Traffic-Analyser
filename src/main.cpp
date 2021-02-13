@@ -130,7 +130,7 @@ void setup() {
   //attachInterrupt(BUTTON, scan_on_off, FALLING); //Habilita interrupção no PIN_SCAN
   get_filename();
   //os_timer_setfn(&tmr0, send_to_server, NULL); //Indica ao Timer qual sera sua Sub rotina.
-  //os_timer_arm(&tmr0,TIME, true); //Inidica ao Timer seu Tempo em mS e se sera repetido ou apenas uma vez 
+  //os_timer_arm(&tmr0,TIME, true); //Indica ao Timer seu Tempo em mS e se sera repetido ou apenas uma vez 
 }
 //Main//////////////////////////////////////////////////////////////////////////////////////////
 void loop() {
@@ -279,6 +279,7 @@ void Wifi_config(){
     error(1);
   } 
   wifiMulti.addAP(ssid_1, password_1);  // add Wi-Fi networks you want to connect to, it connects strongest to weakest
+  wifiMulti.addAP(ssid_2, password_2);
   while (wifiMulti.run() != WL_CONNECTED) { // Wait for the Wi-Fi to connect: scan for Wi-Fi networks, and connect to the strongest of the networks above
     delay(250); Serial.print('.');
   }
