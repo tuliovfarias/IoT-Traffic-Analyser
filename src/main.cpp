@@ -404,8 +404,8 @@ void error(int error_num){
       html_buffer+="ERROR: HC-05 failed!<br>";
       break;
     case 3:
-      str_buffer+="ERROR: SD failed to initialize!\r\n";
-      html_buffer+="ERROR: SD failed to initialize!<br>";
+      str_buffer+="ERROR: SD card failed to initialize!\r\n";
+      html_buffer+="ERROR: SD card failed to initialize!<br>";
       break;
     case 4:
       html_buffer+="ERROR: SD failed to create the log file!<br>";
