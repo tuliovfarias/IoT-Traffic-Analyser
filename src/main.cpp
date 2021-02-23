@@ -61,7 +61,9 @@ void Wifi_config();            //Configura Wifi e HTTP server
 void html_config();         //Configura parâmetros do dispositivo (nome, IP)
 void html_send();              //Envia arquivo para o Server
 void html_monitor();           //Monitoração do dispositivo via server
+void html_scan_on();          //Pausa scan do dispositivo
 void html_scan_off();          //Pausa scan do dispositivo
+void restart_esp();          //Reinicia dispositivo
 
 void BT_ATconfig(void);        //Configura Bluetooth e modo AT (HC-05)
 void delayAndRead(void);       //Envia comandos AT para o HC-05
@@ -70,7 +72,7 @@ void RTC_config(void);         //Configura e verifica erros no RTC
 void RTC_log(void);            //Cria string de data e hora atual do RTC
 
 void SD_config();        //Configura e verifica erros no SD card.
-void SD_write(char);       //escreve no arquivo do SD. Parametro l=log.
+void SD_write(char, bool);       //escreve no arquivo do SD. Parametros: l=log; 1-mostra data e horas;
 
 void scan_on_off(void);        //Função da da interrupção do botão de iniciar e parar scan
 void get_filename();           //Nome do arquivo no formato YYYY.MM.DD.hh.mm.ss
@@ -78,7 +80,7 @@ void get_filename();           //Nome do arquivo no formato YYYY.MM.DD.hh.mm.ss
 //Variáveis globais: ///////////////////////////////////////////////////////////
 
 //Variáveis da memória Flash)
-char DEVICE_NAME[20]; 
+char DEVICE_NAME[20];
 char WIFI_IP[20];    
 char WIFI_GATWAY[20];
 char WIFI_SUBNET[20];
@@ -94,15 +96,17 @@ File dataFile;              //Arquivo .txt para armazenar os dados
 File logFile;           //Arquivo .txt para armazenar o log
 char r;
 char rtc_str[20];           //string que armazena data e hora do rtc
-bool play_scan = 1;     //Inicia e para scan
+bool play_scan = 0;     //Inicia e para scan
 unsigned int i=0;
 unsigned int num_scans=0;
 String LOG_NAME = "log.txt";
 String filename="YYYYMMDD.hhmm.csv";
 String str_buffer="";       // armazena dados do BT
+String html_buffer="";       // log do monitor/config
 String DataString="";
 unsigned int files_count=1; //Contador com número de arquivos no SD
 unsigned int ok_count=0;
+bool error_flag=0; //flag para indicar que houve erro em algum módulo
 
 /*void send_to_server(void*z){  //função da interrupção de timer
   Serial.println("AT+INQ\r\n");
@@ -116,16 +120,21 @@ void setup() {
   Serial.begin(38400);
   while(!Serial);
 #endif
+#ifdef MONITOR_SERIAL
+        Serial.println("Initializing " + device + "...\r\n");
+#endif
   load_flash();
-  RTC_config(); //Configura módulo RTC (DataTime)
-  SD_config(); //Configura módulo cartão SD
-  str_buffer="Initializing " + device + "...\r\n"; SD_write('l');
-  str_buffer="SD card module OK\r\n";SD_write('l'); 
-  str_buffer="RTC module OK\r\n";SD_write('l');
   Wifi_config();
-  str_buffer="WIFI connected to "+WiFi.SSID()+" IP: "+WiFi.localIP().toString()+"\r\n";SD_write('l');
+  html_buffer+="SSID: "+WiFi.SSID()+"<br>IP: "+WiFi.localIP().toString()+"<br>";
+  SD_config(); //Configura módulo cartão SD  
+  html_buffer+="SD card module OK<br>";
+  RTC_config(); //Configura módulo RTC (DataTime)
+  html_buffer+="RTC module OK<br>";
   BT_ATconfig(); //Configura modo AT Bluetooth (HC-05)
-  str_buffer="Bluetooth module OK\r\n";SD_write('l');
+  html_buffer+="Bluetooth module OK<br>";
+  server.handleClient(); //para escrever log no monitor
+  while (error_flag==1){server.handleClient(); ESP.wdtFeed();} //Realimenta WDT
+  str_buffer="Initialized\r\n"; SD_write('l',1);
   logFile.close();
   //attachInterrupt(BUTTON, scan_on_off, FALLING); //Habilita interrupção no PIN_SCAN
   get_filename();
@@ -139,7 +148,7 @@ void loop() {
     ESP.wdtFeed(); //Realimenta WDT
   }
   logFile = SD.open(LOG_NAME, FILE_WRITE);
-  str_buffer="SCAN ON\r\n";SD_write('l');
+  str_buffer="SCAN ON\r\n";SD_write('l',1);
   dataFile = SD.open(filename, FILE_WRITE);
   BTserial.println("AT+INQ"); //Começa scan
   delayAndRead(); str_buffer="";//lê BT para ignorar o OK;
@@ -150,7 +159,7 @@ void loop() {
       r = BTserial.read(); //Lê char vindo do HC-05
       str_buffer.concat(r);
       if (r == '\n') { // Recebe \r\n no final de cada scan
-        SD_write('d'); //Escreve dados com data e hora no SD
+        SD_write('d',1); //Escreve dados com data e hora no SD
         num_scans++;
       }
       else if (r == 'O') { //Reinicia scan após terminar o ciclo (recebe OK)
@@ -165,7 +174,7 @@ void loop() {
       //SD_BTdata(); //Grava char no SD
     }
   }
-  str_buffer="SCAN OFF\r\n";SD_write('l');
+  str_buffer="SCAN OFF\r\n";SD_write('l',1);
   logFile.close();
   BTserial.println("AT+INQC"); //Pára scan do HC-05
   delayAndRead(); //lê BT para ignorar o OK;
@@ -240,11 +249,14 @@ void RTC_config(void) {
   rtc.adjust(DateTime(2020, 06, 22, 23, 19, 0)); //ano, mes,dia,hora,minuto,segundo.
 }
 
-void SD_write(char log_or_data) {
+void SD_write(char log_or_data, bool date_time) {
   //dataFile = SD.open("teste.txt", FILE_WRITE);
-  char buf[] = "YYYY/MM/DD hh:mm:ss,";
-  DateTime now = rtc.now();   //get the time from the RTC
-  DataString=now.toString(buf)+device+","+str_buffer;
+  if (date_time==1){
+    char buf[] = "YYYY/MM/DD hh:mm:ss,";
+    DateTime now = rtc.now();   //get the time from the RTC
+    DataString=now.toString(buf)+device+","+str_buffer;
+  }
+  else DataString=str_buffer;
   if (log_or_data=='l') logFile.print(DataString); //grava no arquivo de log
   else dataFile.print(DataString); //grava no arquivo de dados
   //dataFile.close();
@@ -286,7 +298,9 @@ void Wifi_config(){
   server.on("/", html_send);
   server.on("/config", html_config);
   server.on("/monitor",html_monitor);
+  server.on("/monitor/scan_on",html_scan_on);
   server.on("/monitor/scan_off",html_scan_off);
+  server.on("/monitor/restart",restart_esp);  
   server.begin();
 }
 
@@ -338,13 +352,23 @@ void html_monitor(){
   server.sendHeader("Expires", "-1"); 
   server.send(200, "text/html", ""); // Empty content inhibits Content-length header so we have to close the socket ourselves. 
   append_page_header();*/
+  server.sendContent("<!DOCTYPE html><html><style>.font {font-size: 60px;}</style><h1 class='font'>"+html_buffer+"</h1><p><a href='/monitor/scan_on'><button class='font'>START</button></a></p><p><a href='/monitor/restart'><button class='font'>RESTART</button></a></p></html>");
+}
+
+void restart_esp(){
+  server.sendContent("<meta http-equiv='refresh' content='0; URL=/monitor' />"); // volta a pagina de monitoração em 0 s
+  delay(3); // espera 3 segundos para não ficar recarregando restart
+  while(1); // force ESP to restart
+}
+
+void html_scan_on(){
   play_scan=1;
-  server.sendContent("<!DOCTYPE html><html><style>.font {font-size: 100px;}</style><h1 class='font'>Device: "+device+"</h1><h1 class='font'>Scans: "+String(num_scans)+"</h1><h1 class='font'>OK count: "+ok_count+"</h1><h1 class='font'>Files: "+(String)files_count+"</h1><br><br><p><a href='/monitor/scan_off'><button class='font'>PAUSAR</button></a></p><br><br><p><a href='/config'><button class='font'>CONFIG</button></a></p></html>");
+  server.sendContent("<!DOCTYPE html><html><style>.font {font-size: 100px;}</style><h1 class='font'>Device: "+device+"</h1><h1 class='font'>Scans: "+String(num_scans)+"</h1><h1 class='font'>OK count: "+ok_count+"</h1><h1 class='font'>Files: "+(String)files_count+"</h1><br><p><a href='/monitor/scan_off'><button class='font'>PAUSE</button></a></p><br><p><a href='/config'><button class='font'>CONFIG</button></a></p><h1 class='font'></h1></html>");
 }
 
 void html_scan_off(){
   play_scan=0;
-  server.sendContent("<!DOCTYPE html><html><style>.font {font-size: 100px;}</style><h1 class='font'>Device: "+device+"</h1><h1 class='font'>Scans: "+String(num_scans)+"</h1><h1 class='font'>OK count: "+ok_count+"</h1><h1 class='font'>Files: "+(String)files_count+"</h1><p><a href='/monitor'><button class='font'>INICIAR</button></a></p><br><br><p><a href='/config'><button class='font'>CONFIG</button></a></p></html>");
+  server.sendContent("<!DOCTYPE html><html><style>.font {font-size: 100px;}</style><h1 class='font'>Device: "+device+"</h1><h1 class='font'>Scans: "+String(num_scans)+"</h1><h1 class='font'>OK count: "+ok_count+"</h1><h1 class='font'>Files: "+(String)files_count+"</h1><p><a href='/monitor/scan_on'><button class='font'>START</button></a></p><br><br><p><a href='/config'><button class='font'>CONFIG</button></a></p></html>");
 }
 void get_filename(){
   char buf[] = "_YYYYMMDD.hhmm.csv";
@@ -366,26 +390,28 @@ void load_flash(){
 }
 
 void error(int error_num){
+  error_flag=1;
   switch (error_num){
     case 0:
-      str_buffer="ERRO: RTC não iniciou!";SD_write('l');
+      str_buffer+="ERROR: RTC failed!\r\n";SD_write('l',0);
+      html_buffer+="ERROR: RTC failed!<br>";
       break;
     case 1:
-      Serial.println(wifi_ip);
-      str_buffer="WiFi STATION Failed to configure";SD_write('l');
+      str_buffer="ERROR: WiFi failed!\r\n";
       break;
     case 2:
-      str_buffer="ERRO: Não entrou no modo AT\r\n";SD_write('l');
+      str_buffer="ERROR: HC-05 failed!\r\n";
+      html_buffer+="ERROR: HC-05 failed!<br>";
       break;
     case 3:
-      #ifdef MONITOR_SERIAL
-      Serial.println("ERRO: SD não iniciou!");
-      #endif
+      str_buffer+="ERROR: SD failed to initialize!\r\n";
+      html_buffer+="ERROR: SD failed to initialize!<br>";
       break;
     case 4:
-      #ifdef MONITOR_SERIAL
-      Serial.println("ERRO: Arquivo não pôde ser criado no SD!");
-      #endif
+      html_buffer+="ERROR: SD failed to create the log file!<br>";
   ;}
-  while(1); // force ESP to restart
+  #ifdef MONITOR_SERIAL
+    Serial.println(str_buffer);
+  #endif
+  //while(1); // force ESP to restart
 } 
