@@ -15,39 +15,54 @@ c.execute('USE db_test;')
 
 df_plot1=pd.DataFrame()
 df_plot2=pd.DataFrame()
+df_plot3=pd.DataFrame()
+df_plot4=pd.DataFrame()
 start_time= datetime.datetime(2019, 1, 10, 18, 20) #start_time= '2020-06-22 23:15:00'
 end_time= datetime.datetime(2019, 1, 10, 18, 55) #end_time = '2020-06-23 00:45:00'
-devices="'A1','A2'"
+devices="'A1'"
+device="'A2'"
 time_slot= timedelta(minutes=5, hours=0)
 
 # SCANS TOTAL
 while (start_time<end_time):
     end_time_temp= start_time + time_slot
-#    string= "SELECT * FROM db_test.mac_count WHERE datetime >= '"+ str(start_time) +"' and datetime < '"+ str(end_time_temp)+"'"
+    #string= "SELECT * FROM db_test.mac_count WHERE datetime >= '"+ str(start_time) +"' and datetime < '"+ str(end_time_temp)+"'"
     query1= "SELECT IFNULL (SUM(count),0) FROM db_test.mac_count WHERE datetime >= '"+ str(start_time) +"' and datetime < '"+ str(end_time_temp)+"'"+" and device_name IN ("+devices+")"
     query2= "SELECT IFNULL (COUNT(MAC),0) FROM db_test.mac_count WHERE datetime >= '"+ str(start_time) +"' and datetime < '"+ str(end_time_temp)+"'"+" and device_name IN ("+devices+")"
     
+    query3= "SELECT IFNULL (SUM(count),0) FROM db_test.mac_count WHERE datetime >= '"+ str(start_time) +"' and datetime < '"+ str(end_time_temp)+"'"+" and device_name IN ("+device+")"
+    query4= "SELECT IFNULL (COUNT(MAC),0) FROM db_test.mac_count WHERE datetime >= '"+ str(start_time) +"' and datetime < '"+ str(end_time_temp)+"'"+" and device_name IN ("+device+")"
     #query1= "SELECT IFNULL (SUM(count),0) FROM db_test.mac_count WHERE datetime >= '"+ str(start_time) +"' and datetime < '"+ str(end_time_temp) +"' GROUP BY UNIX_TIMESTAMP(datetime) DIV 300 "
     #query2= "SELECT IFNULL (COUNT(MAC),0) FROM db_test.mac_count WHERE datetime >= '"+ str(start_time) +"' and datetime < '"+ str(end_time_temp) +"' GROUP BY UNIX_TIMESTAMP(datetime) DIV 300 "
 
     response1=c.execute(query1)
     response2=c.execute(query2)
+
+    response3=c.execute(query3)
+    response4=c.execute(query4)
+
     for row in response1.fetchall():
         df_plot1=df_plot1.append({'datetime': start_time.strftime('%d/%m\n%H:%M'), 'num_scans': row[0]}, ignore_index=True)
     for row in response2.fetchall():
         df_plot2=df_plot2.append({'datetime': start_time.strftime('%d/%m\n%H:%M'), 'num_cars': row[0]}, ignore_index=True)
+    for row in response3.fetchall():
+        df_plot3=df_plot3.append({'datetime': start_time.strftime('%d/%m\n%H:%M'), 'num_scans': row[0]}, ignore_index=True)
+    for row in response4.fetchall():
+        df_plot4=df_plot4.append({'datetime': start_time.strftime('%d/%m\n%H:%M'), 'num_cars': row[0]}, ignore_index=True)
     start_time= start_time + time_slot
 #plt.plot(df_plot['datetime'],df_plot['num_cars'],marker='o', ) #ds='steps'
 
 #PLOT IN THE SAME CHART
 #plt.bar(df_plot1['datetime'],df_plot1['num_scans'], align='edge', width=0.9) #número de scans a cada slot de tempo (barra azul)
-#plt.bar(df_plot2['datetime'],df_plot2['num_cars'], align='edge', width=0.9) #número de carros a cada slot de tempo (barra laranja)
+plt.plot(df_plot4['datetime'],df_plot4['num_cars']) #número de scans a cada slot de tempo (barra azul)
+plt.plot(df_plot2['datetime'],df_plot2['num_cars']) #número de carros a cada slot de tempo (barra laranja)
 
 #PLOT IN DISTINCT CHARTS
-fig, axs = plt.subplots(nrows=2, sharex=True)
-fig.suptitle('Total of scans and number of distinct scans')
-axs[0].bar(df_plot1['datetime'],df_plot1['num_scans'], align='edge', width=0.9) #número de scans a cada slot de tempo (barra azul)
-axs[1].bar(df_plot2['datetime'],df_plot2['num_cars'], align='edge', width=0.9) #número de carros a cada slot de tempo (barra laranja)
+# fig, axs = plt.subplots(nrows=2, sharex=True)
+# fig.suptitle('Total of scans and number of distinct scans')
+# #axs[0].bar(df_plot1['datetime'],df_plot1['num_scans'], align='edge', width=0.9) #número de scans a cada slot de tempo 
+# axs[0].plot(df_plot4['datetime'],df_plot4['num_cars']) #número de scans a cada slot de tempo 
+# axs[1].plot(df_plot2['datetime'],df_plot2['num_cars']) #número de carros a cada slot de tempo 
 plt.show()
 
 #i=1
