@@ -5977,3 +5977,16 @@ Importing data to database...
 No files to import!
 [2021-02-26  0:35:59] Scripts finished! 
  
+-------------------------------------------------- 
+[2021-02-26  0:45:58] Runing scripts... 
+[2021-02-26  0:45:59] Scripts finished! 
+-------------------------------------------------- 
+[2021-02-26  0:46:26] Runing scripts... 
+Connecting to MySQL database...
+Connected!
+Importing data to database...
+A1_201901101820.csv
+A2_201901101820.csv
+A3_201901101820.csv
+Imported!
+[2021-02-26  0:46:29] Scripts finished! 
