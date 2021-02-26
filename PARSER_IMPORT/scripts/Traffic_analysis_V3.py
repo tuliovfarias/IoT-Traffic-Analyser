@@ -1,7 +1,7 @@
 #%%
 ##Limpar variáveis
-from IPython import get_ipython
-get_ipython().magic('reset -sf')
+#from IPython import get_ipython
+#get_ipython().magic('reset -sf')
 
 from sqlalchemy import create_engine
 import pandas as pd
