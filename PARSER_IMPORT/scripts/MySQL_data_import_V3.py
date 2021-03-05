@@ -41,8 +41,8 @@ list_files = glob.glob(os.path.join(SOURCE_DIR,'*.csv'))
 if len(list_files)==0:
     print("No files to import!")
 else:
-    for file in os.listdir(SOURCE_DIR):
-        df = pd.read_csv(SOURCE_DIR+'/'+file, header=None, error_bad_lines=False, warn_bad_lines=True,  names=col_names,  index_col=False, encoding='ISO-8859–1', engine='python',sep=",") #
+    for file_path in list_files:
+        df = pd.read_csv(file_path, header=None, error_bad_lines=False, warn_bad_lines=True,  names=col_names,  index_col=False, encoding='ISO-8859–1', engine='python',sep=",") #
         #df.MAC=df.MAC.str.strip('+INQ:') # remove +INQ dos MACs
         start_datetime=df.at[0,'datetime']
         end_datetime=df.at[len(df.index)-1,'datetime']
@@ -54,8 +54,6 @@ else:
         df.to_sql(name='table_temp', if_exists='append', con=c, index=False) # tabela temporária apenas com dados do arquivo atual
         df.to_sql(name='table_all_scans', if_exists='append', con=c, index=False) # tabela com todos os dados
         #c.execute('ALTER TABLE db_test.table_temp MODIFY COLUMN `datetime` datetime;')
-        shutil.move(SOURCE_DIR+'/'+file, TARGET_DIR)
-        print(file)
         query_mac_count=("""INSERT INTO mac_count
                     SELECT *,COUNT(MAC)
                     FROM db_test.table_temp
@@ -66,5 +64,7 @@ else:
     #c.execute("""CREATE TABLE IF NOT EXISTS mac_count AS
     #          SELECT *, COUNT(MAC) AS qtd FROM db_test.table_test 
     #         GROUP BY `MAC`;""")
-
+        shutil.move(file_path,os.path.join(TARGET_DIR,os.path.basename(file_path)))
+        print(file_path)
     print("Imported!")
+# %%
