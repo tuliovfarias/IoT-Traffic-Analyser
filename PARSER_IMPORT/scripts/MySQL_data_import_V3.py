@@ -6,6 +6,7 @@ import os
 import shutil
 import warnings
 import sys
+import glob
 
 warnings.filterwarnings("ignore") ##Desabilita mensagens de Warning
 sys.exit
@@ -13,6 +14,11 @@ SCRIPT_PATH= __file__
 BASE_DIR=SCRIPT_PATH.split("\scripts")[0]
 SOURCE_DIR= os.path.join(BASE_DIR,'data')
 TARGET_DIR= os.path.join(BASE_DIR,'imported')
+
+if os.path.exists(SOURCE_DIR)==False:
+    os.mkdir(SOURCE_DIR)
+if os.path.exists(TARGET_DIR)==False:
+    os.mkdir(TARGET_DIR)
 
 ##MYSQL
 print("Connecting to MySQL database...")
@@ -30,7 +36,8 @@ c.execute("""CREATE TABLE IF NOT EXISTS mac_count(
             PRIMARY KEY (device_name,datetime,MAC)
             );""")
 print("Importing data to database...")
-list_files = os.listdir(SOURCE_DIR)
+#list_files = os.listdir(SOURCE_DIR)
+list_files = glob.glob(os.path.join(SOURCE_DIR,'*.csv'))
 if len(list_files)==0:
     print("No files to import!")
 else:
