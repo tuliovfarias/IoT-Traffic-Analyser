@@ -2,6 +2,7 @@
 
 ::Configurar para iniciar task pelo diretório deste script
 cd ..
+IF NOT EXIST %CD%\logs\ mkdir %CD%\logs
 SET LOG_FILE=%CD%\logs\data_sync_import.log
 
 ECHO -------------------------------------------------- >> %LOG_FILE%
