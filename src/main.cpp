@@ -23,7 +23,7 @@
 #define xt_rsil(level) (__extension__({uint32_t state; __asm__ __volatile__("rsil %0," __STRINGIFY(level) : "=a" (state)); state;}))
 #define xt_wsr_ps(state)  __asm__ __volatile__("wsr %0,ps; isync" :: "a" (state) : "memory")
 
-#define MONITOR_SERIAL //Comentar para testar em campo
+//#define MONITOR_SERIAL //Comentar para testar em campo
 #define HC_3
 //#define TIME 30000 //Tempo para interrupção de timer (ms)
 
@@ -119,9 +119,6 @@ void setup() {
 #ifdef MONITOR_SERIAL
   Serial.begin(38400);
   while(!Serial);
-#endif
-#ifdef MONITOR_SERIAL
-        Serial.println("Initializing " + device + "...\r\n");
 #endif
   load_flash();
   Wifi_config();
@@ -246,7 +243,7 @@ void RTC_config(void) {
   /*if (! rtc.isrunning()) {
     while (1);
   }*/
-  rtc.adjust(DateTime(2020, 06, 22, 23, 19, 0)); //ano, mes,dia,hora,minuto,segundo.
+  //rtc.adjust(DateTime(2021, 03, 7, 12, 35, 0)); //ano, mes,dia,hora,minuto,segundo.
 }
 
 void SD_write(char log_or_data, bool date_time) {
@@ -313,10 +310,10 @@ void html_send(){ // This gets called twice, the first pass selects the input, t
   //logFile.close();
   dataFile=SD.open(filename);
   if (dataFile){
-    Serial.println(millis());////////////////////
+    //Serial.println(millis());////////////////////
     server.sendHeader("Content-Disposition", "attachment; filename="+filename);
     server.streamFile(dataFile, "text/csv");
-    Serial.println(millis());////////////////////
+    //Serial.println(millis());////////////////////
     dataFile.close();
   }else;
   get_filename();
