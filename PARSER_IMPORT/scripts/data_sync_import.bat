@@ -14,5 +14,5 @@ call C:\cygwin64\bin\bash.exe -l "%CD%\scripts\download_files.sh" >_ && type _ &
 python "%CD%\scripts\MySQL_data_import_V3.py" >> %LOG_FILE% 2>&1
 
 echo [%date:~6,10%/%date:~3,2%/%date:~0,2% %time:~0,8%] Scripts finished! >> %LOG_FILE%
-PAUSE
+::PAUSE
 exit
