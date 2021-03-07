@@ -7,7 +7,7 @@ SET LOG_FILE=%CD%\logs\data_sync_import.log
 ECHO -------------------------------------------------- >> %LOG_FILE%
 echo [%date:~6,10%/%date:~3,2%/%date:~0,2% %time:~0,8%] Runing scripts... >> %LOG_FILE%
 
-call C:\cygwin64\bin\bash.exe -l "%CD%\scripts\download_files.sh" >_ && type _ && type _ >> %LOG_FILE%
+call C:\cygwin64\bin\bash.exe -l "%CD%\scripts\download_files.sh" >> %LOG_FILE%
 :: Activate python env in cmd
 ::call %HomePath%\Anaconda3\Scripts\activate.bat
 :: Execute MySQL import python script
