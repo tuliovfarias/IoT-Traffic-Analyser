@@ -53,7 +53,7 @@ else:
     for file_path in list_files:
         file_name=os.path.basename(file_path)
         if (len(open(file_path).readlines())<=1):
-            print("  ERROR"+file_name+" empty!")
+            print("  ERROR: "+file_name+" is empty!")
             shutil.move(file_path,os.path.join(ERROR_FILES,file_name))
         else:
             print("  "+file_name)
