@@ -7,6 +7,8 @@ SYNC_DIR="$BASE_DIR"/data
 URL_FILE="$BASE_DIR"/URLs.lst
 LOG_FILE="$BASE_DIR"/logs/download_files.log
 
+mkdir -p "$BASE_DIR"/logs/ #Cria diretório log caso nao exista
+
 sed -i $'s/\r$//' "$URL_FILE" # DOS to Unix
 
 cat "$URL_FILE" | while read URL; do
