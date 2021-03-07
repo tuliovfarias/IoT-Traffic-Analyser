@@ -10,6 +10,7 @@ import glob
 
 warnings.filterwarnings("ignore") ##Desabilita mensagens de Warning
 sys.exit
+
 TABLE_ALL_SCANS='all_scans'
 TABLE_MAC_COUNT='mac_count'
 TABLE_TEMP='temp'
