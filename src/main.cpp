@@ -23,7 +23,7 @@
 #define xt_rsil(level) (__extension__({uint32_t state; __asm__ __volatile__("rsil %0," __STRINGIFY(level) : "=a" (state)); state;}))
 #define xt_wsr_ps(state)  __asm__ __volatile__("wsr %0,ps; isync" :: "a" (state) : "memory")
 
-#define MONITOR_SERIAL //Comentar para testar em campo
+//#define MONITOR_SERIAL //Comentar para testar em campo
 #define HC_3
 //#define TIME 30000 //Tempo para interrupção de timer (ms)
 
@@ -119,9 +119,6 @@ void setup() {
 #ifdef MONITOR_SERIAL
   Serial.begin(38400);
   while(!Serial);
-#endif
-#ifdef MONITOR_SERIAL
-        Serial.println("Initializing " + device + "...\r\n");
 #endif
   load_flash();
   Wifi_config();
@@ -246,7 +243,7 @@ void RTC_config(void) {
   /*if (! rtc.isrunning()) {
     while (1);
   }*/
-  rtc.adjust(DateTime(2020, 06, 22, 23, 19, 0)); //ano, mes,dia,hora,minuto,segundo.
+  //rtc.adjust(DateTime(2021, 03, 7, 12, 35, 0)); //ano, mes,dia,hora,minuto,segundo.
 }
 
 void SD_write(char log_or_data, bool date_time) {
@@ -282,7 +279,7 @@ void Wifi_config(){
   IPAddress subnet;     // Set your network sub-network mask here
   IPAddress dns;        // Set your network DNS usually your Router base address*/
   //Converter strings para IP:
-  bool x = local_IP.fromString(wifi_ip); // Define o IP local
+  //bool x = local_IP.fromString(wifi_ip); // Define o IP local
   /*x = gateway.fromString(wifi_gateway);
   x = subnet.fromString(wifi_subnet);
   x = subnet.fromString(wifi_dns);*/
@@ -290,8 +287,9 @@ void Wifi_config(){
   if (!WiFi.config(local_IP, gateway, subnet, dns)) { //WiFi.config(ip, gateway, subnet, dns1, dns2);
     error(1);
   } 
-  wifiMulti.addAP(ssid_1, password_1);  // add Wi-Fi networks you want to connect to, it connects strongest to weakest
-  wifiMulti.addAP(ssid_2, password_2);
+  //wifiMulti.addAP(ssid_1, password_1);  // add Wi-Fi networks you want to connect to, it connects strongest to weakest
+  //wifiMulti.addAP(ssid_2, password_2);
+  wifiMulti.addAP(ssid_3, password_3);
   while (wifiMulti.run() != WL_CONNECTED) { // Wait for the Wi-Fi to connect: scan for Wi-Fi networks, and connect to the strongest of the networks above
     delay(250); Serial.print('.');
   }
@@ -313,10 +311,10 @@ void html_send(){ // This gets called twice, the first pass selects the input, t
   //logFile.close();
   dataFile=SD.open(filename);
   if (dataFile){
-    Serial.println(millis());////////////////////
+    //Serial.println(millis());////////////////////
     server.sendHeader("Content-Disposition", "attachment; filename="+filename);
     server.streamFile(dataFile, "text/csv");
-    Serial.println(millis());////////////////////
+    //Serial.println(millis());////////////////////
     dataFile.close();
   }else;
   get_filename();
@@ -398,6 +396,7 @@ void error(int error_num){
       break;
     case 1:
       str_buffer="ERROR: WiFi failed!\r\n";
+      error_flag=0; //pq o erro de wifi dá se usar roteamento do cel
       break;
     case 2:
       str_buffer="ERROR: HC-05 failed!\r\n";
