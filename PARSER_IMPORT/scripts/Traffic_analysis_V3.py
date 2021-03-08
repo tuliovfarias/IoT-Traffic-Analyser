@@ -15,9 +15,10 @@ c.execute('USE db_test;')
 df_plot1=pd.DataFrame()
 df_plot2=pd.DataFrame()
 
-start_time= datetime.datetime(2019, 1, 10, 18, 20) #start_time= '2020-06-22 23:15:00'
-end_time= datetime.datetime(2019, 1, 10, 18, 55) #end_time = '2020-06-23 00:45:00'
-devices=["'A1'","'A2'","'A3'"]
+start_time= datetime.datetime(2021, 3, 7, 21, 15) #start_time= '2020-06-22 23:15:00'
+end_time= datetime.datetime(2021, 3, 7, 22, 00) #end_time = '2020-06-23 00:45:00'
+devices=["'A1'","'A2'"] ##devices=["'A1'","'A2'","'A3'"]
+
 time_slot= timedelta(minutes=5, hours=0)
 
 # SCANS TOTAL
@@ -25,14 +26,14 @@ for device in devices:
     start_time_temp=start_time
     while (start_time_temp<end_time):
         end_time_temp= start_time_temp + time_slot
-        query1= "SELECT IFNULL (SUM(count),0) FROM db_test.mac_count WHERE datetime >= '"+ str(start_time_temp) +"' and datetime < '"+ str(end_time_temp)+"'"+" and device_name IN ("+device+")"
-        query2= "SELECT IFNULL (COUNT(MAC),0) FROM db_test.mac_count WHERE datetime >= '"+ str(start_time_temp) +"' and datetime < '"+ str(end_time_temp)+"'"+" and device_name IN ("+device+")"
+        query1= "SELECT IFNULL (SUM(count),0) FROM db_test.mac_count WHERE datetime >= '"+ str(start_time_temp) +"' and datetime < '"+ str(end_time_temp)+"'"+" and device_name IN ("+device+") and MAC <> 'OK'"
+        query2= "SELECT IFNULL (COUNT(MAC),0) FROM db_test.mac_count WHERE datetime >= '"+ str(start_time_temp) +"' and datetime < '"+ str(end_time_temp)+"'"+" and device_name IN ("+device+") and MAC <> 'OK'"
         response1=c.execute(query1)
         response2=c.execute(query2)
         for row in response1.fetchall():
             df_plot1=df_plot1.append({'datetime': start_time_temp.strftime('%d/%m\n%H:%M'), 'num_scans': row[0]}, ignore_index=True)
         for row in response2.fetchall():
-            df_plot2=df_plot2.append({'datetime': start_time_temp.strftime('%d/%m\n%H:%M'), 'num_cars': row[0]*8.2115+91.3910}, ignore_index=True)
+            df_plot2=df_plot2.append({'datetime': start_time_temp.strftime('%d/%m\n%H:%M'), 'num_cars': row[0]*8.2115+91.3910}, ignore_index=True) #Número de carros com o modelo aplicado
         start_time_temp= start_time_temp + time_slot
     #plt.plot(df_plot['datetime'],df_plot['num_cars'],marker='o', ) #ds='steps'
 

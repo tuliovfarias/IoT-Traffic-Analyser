@@ -279,7 +279,7 @@ void Wifi_config(){
   IPAddress subnet;     // Set your network sub-network mask here
   IPAddress dns;        // Set your network DNS usually your Router base address*/
   //Converter strings para IP:
-  bool x = local_IP.fromString(wifi_ip); // Define o IP local
+  //bool x = local_IP.fromString(wifi_ip); // Define o IP local
   /*x = gateway.fromString(wifi_gateway);
   x = subnet.fromString(wifi_subnet);
   x = subnet.fromString(wifi_dns);*/
@@ -287,8 +287,9 @@ void Wifi_config(){
   if (!WiFi.config(local_IP, gateway, subnet, dns)) { //WiFi.config(ip, gateway, subnet, dns1, dns2);
     error(1);
   } 
-  wifiMulti.addAP(ssid_1, password_1);  // add Wi-Fi networks you want to connect to, it connects strongest to weakest
-  wifiMulti.addAP(ssid_2, password_2);
+  //wifiMulti.addAP(ssid_1, password_1);  // add Wi-Fi networks you want to connect to, it connects strongest to weakest
+  //wifiMulti.addAP(ssid_2, password_2);
+  wifiMulti.addAP(ssid_3, password_3);
   while (wifiMulti.run() != WL_CONNECTED) { // Wait for the Wi-Fi to connect: scan for Wi-Fi networks, and connect to the strongest of the networks above
     delay(250); Serial.print('.');
   }
@@ -395,6 +396,7 @@ void error(int error_num){
       break;
     case 1:
       str_buffer="ERROR: WiFi failed!\r\n";
+      error_flag=0; //pq o erro de wifi dá se usar roteamento do cel
       break;
     case 2:
       str_buffer="ERROR: HC-05 failed!\r\n";
