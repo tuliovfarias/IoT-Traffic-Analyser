@@ -76,6 +76,8 @@ void SD_write(char, bool);       //escreve no arquivo do SD. Parametros: l=log; 
 
 void scan_on_off(void);        //Função da da interrupção do botão de iniciar e parar scan
 void get_filename();           //Nome do arquivo no formato YYYY.MM.DD.hh.mm.ss
+void config_datetime();
+void get_DataString();
 
 //Variáveis globais: ///////////////////////////////////////////////////////////
 
@@ -104,6 +106,7 @@ String filename="YYYYMMDD.hhmm.csv";
 String str_buffer="";       // armazena dados do BT
 String html_buffer="";       // log do monitor/config
 String DataString="";
+String dateNtime="";
 unsigned int files_count=1; //Contador com número de arquivos no SD
 unsigned int ok_count=0;
 bool error_flag=0; //flag para indicar que houve erro em algum módulo
@@ -122,6 +125,7 @@ void setup() {
 #endif
   load_flash();
   Wifi_config();
+  html_buffer+="Device: "+ device +"<br>";
   html_buffer+="SSID: "+WiFi.SSID()+"<br>IP: "+WiFi.localIP().toString()+"<br>";
   SD_config(); //Configura módulo cartão SD  
   html_buffer+="SD card module OK<br>";
@@ -129,6 +133,7 @@ void setup() {
   html_buffer+="RTC module OK<br>";
   BT_ATconfig(); //Configura modo AT Bluetooth (HC-05)
   html_buffer+="Bluetooth module OK<br>";
+  get_DataString(); //get the time from the RTC
   server.handleClient(); //para escrever log no monitor
   while (error_flag==1){server.handleClient(); ESP.wdtFeed();} //Realimenta WDT
   str_buffer="Initialized\r\n"; SD_write('l',1);
@@ -245,6 +250,22 @@ void RTC_config(void) {
   }*/
   //rtc.adjust(DateTime(2021, 03, 7, 12, 35, 0)); //ano, mes,dia,hora,minuto,segundo.
 }
+void config_datetime(){
+  int ano=dateNtime.substring(1,4).toInt();
+  int mes=dateNtime.substring(5,7).toInt();
+  int dia=dateNtime.substring(8,10).toInt();
+  int hora=dateNtime.substring(11,13).toInt();
+  int minutos=dateNtime.substring(14,16).toInt();
+  int segundos=dateNtime.substring(17,19).toInt();
+  rtc.adjust(DateTime(ano,mes,dia,hora,minutos,segundos));
+  get_DataString(); 
+}
+
+void get_DataString(){
+  char buf[] = "YYYY/MM/DD hh:mm:ss";
+  DateTime now = rtc.now();
+  DataString=now.toString(buf);  //get the time from the RTC
+}
 
 void SD_write(char log_or_data, bool date_time) {
   //dataFile = SD.open("teste.txt", FILE_WRITE);
@@ -324,7 +345,7 @@ void html_send(){ // This gets called twice, the first pass selects the input, t
 
 void html_config(){
   bool flag=0;
-  server.sendContent("<!DOCTYPE html><html><style>.font {font-size: 100px;}</style><form class='font' action='/config'><label class='font' for='device'>Device name:</label><input class='font' type='text' name='device' value='"+device+"'><br><br><label class='font' for='ip'>IP:</label><input class='font' type='text' name='ip' value='"+wifi_ip+"'><br><br><input class='font' type='submit' value='Update'></form>");
+  server.sendContent("<!DOCTYPE html><html><style>.font {font-size: 100px;}</style><form class='font' action='/config'><label class='font' for='device'>Device name:</label><input class='font' type='text' name='device' value='"+device+"'><br><br><label class='font' for='ip'>IP:</label><input class='font' type='text' name='ip' value='"+wifi_ip+"'><br><br><label class='font' for='datetime'>Datetime:</label><input class='font' type='text' name='datetime' value='"+DataString+"'><br><br><input class='font' type='submit' value='Update'></form>");
   for (int i = 0; i < server.args(); i++) { // Só entra se tiver argumentos
     flag=1; //Indica que apertou o botão Update.
     String server_argName = server.argName(i);
@@ -338,6 +359,10 @@ void html_config(){
       wifi_ip.toCharArray(WIFI_IP,20); // Necessário, pois a entrada da função EEPROM.put deve ter tamanho da saída do get.
       EEPROM.put(20,WIFI_IP); EEPROM.commit(); //Armazena dados no flash
     }
+    else if ((server_argName=="datetime") & (server.arg("datetime")!="")){
+      dateNtime=server.arg("datetime");
+      config_datetime();
+    }
   }
   if(flag==1){
     server.sendContent("<meta http-equiv='refresh' content='0; URL=/monitor' />"); // volta a pagina de monitoração em 0 s
@@ -350,7 +375,7 @@ void html_monitor(){
   server.sendHeader("Expires", "-1"); 
   server.send(200, "text/html", ""); // Empty content inhibits Content-length header so we have to close the socket ourselves. 
   append_page_header();*/
-  server.sendContent("<!DOCTYPE html><html><style>.font {font-size: 60px;}</style><h1 class='font'>"+html_buffer+"</h1><p><a href='/monitor/scan_on'><button class='font'>START</button></a></p><p><a href='/monitor/restart'><button class='font'>RESTART</button></a></p></html>");
+  server.sendContent("<!DOCTYPE html><html><style>.font {font-size: 60px;}</style><h1 class='font'>"+html_buffer+"</h1><br>"+DataString+"<br><br><p><a href='/monitor/scan_on'><button class='font'>START</button></a></p><br><p><a href='/monitor/restart'><button class='font'>RESTART</button></a></p><br><p><a href='/config'><button class='font'>CONFIG</button></a></p></html>");
 }
 
 void restart_esp(){
@@ -361,7 +386,7 @@ void restart_esp(){
 
 void html_scan_on(){
   play_scan=1;
-  server.sendContent("<!DOCTYPE html><html><style>.font {font-size: 100px;}</style><h1 class='font'>Device: "+device+"</h1><h1 class='font'>Scans: "+String(num_scans)+"</h1><h1 class='font'>OK count: "+ok_count+"</h1><h1 class='font'>Files: "+(String)files_count+"</h1><br><p><a href='/monitor/scan_off'><button class='font'>PAUSE</button></a></p><br><p><a href='/config'><button class='font'>CONFIG</button></a></p><h1 class='font'></h1></html>");
+  server.sendContent("<!DOCTYPE html><html><style>.font {font-size: 100px;}</style><h1 class='font'>Device: "+device+"</h1><h1 class='font'>Scans: "+String(num_scans)+"</h1><h1 class='font'>OK count: "+ok_count+"</h1><h1 class='font'>Files: "+(String)files_count+"</h1><br><p><a href='/monitor/scan_off'><button class='font'>PAUSE</button></a></p><br><p><a href='/config'><button class='font'>CONFIG</button></a></p></html>");
 }
 
 void html_scan_off(){
