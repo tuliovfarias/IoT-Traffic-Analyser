@@ -15,9 +15,9 @@ c.execute('USE db_test;')
 df_plot1=pd.DataFrame()
 df_plot2=pd.DataFrame()
 
-start_time= datetime.datetime(2021, 3, 7, 21, 15) #start_time= '2020-06-22 23:15:00'
-end_time= datetime.datetime(2021, 3, 7, 22, 00) #end_time = '2020-06-23 00:45:00'
-devices=["D2"] ##devices=["'A1'","'A2'","'A3'"]
+start_time= datetime.datetime(2021, 3, 19, 17, 15) #ano,mes,dia,hora,minuto
+end_time= datetime.datetime(2021, 3, 19, 18, 36) 
+devices=["'D2'"] ##devices=["'A1'","'A2'","'A3'"]
 
 time_slot= timedelta(minutes=5, hours=0)
 
