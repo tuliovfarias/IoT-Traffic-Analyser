@@ -15,13 +15,11 @@ c.execute('USE db_test;')
 df_plot1=pd.DataFrame()
 df_plot2=pd.DataFrame()
 
-start_time= datetime.datetime(2000,1,1,00,47) #start_time= '2020-06-22 23:15:00'
-end_time= datetime.datetime(2000,1,1,00,52) #end_time = '2020-06-23 00:45:00'
-devices=["'Rua2'"]
-#devices=["'A1'","'A2'","'A3'"]
-#devices=["'A1'","'A2'"] #
-
-time_slot= timedelta(minutes=1, hours=0)
+start_time= datetime.datetime(2021,3,19,17,50) #INÍCIO (ano, mês, dia, hora, minuto)
+end_time= datetime.datetime(2021,3,19,18,30) #FINAL (ano, mês, dia, hora, minuto)
+devices=["'D1'","'D2'"]# dispositivos para plotar o número de carros 
+time_slot= timedelta(minutes=5, hours=0) # intervalo de agregação
+chart='line' #tipo de gráfico (line (linha); bar (barra))
 
 # SCANS TOTAL
 for device in devices:
@@ -35,14 +33,20 @@ for device in devices:
         for row in response1.fetchall():
             df_plot1=df_plot1.append({'datetime': start_time_temp.strftime('%d/%m\n%H:%M'), 'num_scans': row[0]}, ignore_index=True)
         for row in response2.fetchall():
-            df_plot2=df_plot2.append({'datetime': start_time_temp.strftime('%d/%m\n%H:%M'), 'num_cars': row[0]*8.2115+91.3910}, ignore_index=True) #Número de carros com o modelo aplicado
+            if row[0]!=0:
+                df_plot2=df_plot2.append({'datetime': start_time_temp.strftime('%d/%m\n%H:%M'), 'num_cars': row[0]*8.2115+15.2318}, ignore_index=True) #Número de carros com o modelo aplicado
+            else:
+                df_plot2=df_plot2.append({'datetime': start_time_temp.strftime('%d/%m\n%H:%M'), 'num_cars': 0}, ignore_index=True) #Número de carros com o modelo aplicado
         start_time_temp= start_time_temp + time_slot
     #plt.plot(df_plot['datetime'],df_plot['num_cars'],marker='o', ) #ds='steps'
 
     #PLOT IN THE SAME CHART
     #plt.bar(df_plot1['datetime'],df_plot1['num_scans'], align='edge', width=0.9) #número de scans a cada slot de tempo (barra azul)
     plt.title('Number of cars')
-    plt.plot(df_plot2['datetime'],df_plot2['num_cars']) #número de carros a cada slot de tempo (barra laranja)
+    if (chart=='bar'):
+        plt.bar(df_plot2['datetime'],df_plot2['num_cars'], align='edge', width=0.9) #número de carros a cada slot de tempo (barra laranja)
+    else:
+        plt.plot(df_plot2['datetime'],df_plot2['num_cars'])
     plt.legend(devices)
     df_plot1.drop(df_plot1.index, inplace=True) #limpar DF
     df_plot2.drop(df_plot2.index, inplace=True) #limpar DF
